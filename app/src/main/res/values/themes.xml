@@ -1,0 +1,39 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.APP01" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorOnPrimary">@color/light_on_primary</item>
+        <item name="colorSecondary">@color/light_secondary</item>
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="colorSurface">@color/light_surface</item>
+
+        <item name="tagTextColor">@color/light_primary</item>
+        <item name="upvoteColor">@color/upvote_green</item>
+        <item name="downvoteColor">@color/downvote_red</item>
+
+        <!-- Global Button Style -->
+        <item name="materialButtonStyle">@style/Widget.Material3.Button.TonalButton</item>
+        
+        <!-- Shape appearance -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.APP01.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.APP01.Medium</item>
+    </style>
+
+    <style name="Theme.APP01" parent="Base.Theme.APP01" />
+
+    <style name="ShapeAppearance.APP01.Small" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.APP01.Medium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="SettingsItemStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:background">?attr/colorSurface</item>
+    </style>
+</resources>

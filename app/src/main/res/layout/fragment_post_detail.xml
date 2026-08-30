@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:padding="8dp"
+    tools:context=".forum.PostDetailFragment">
+
+        <TextView
+        android:id="@+id/textViewPostDetailTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Post Title Goes Here" />
+
+    <TextView
+        android:id="@+id/textViewPostDetailUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        app:layout_constraintStart_toStartOf="@+id/textViewPostDetailTitle"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPostDetailTitle"
+        tools:text="by User123" />
+
+    <TextView
+        android:id="@+id/textViewPostDetailTimestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textViewPostDetailUsername"
+        tools:text="2 hours ago" />
+
+    <TextView
+        android:id="@+id/textViewOriginalPostLink"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="View Original Post"
+        android:textColor="?attr/colorPrimary"
+        android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="@+id/textViewPostDetailTitle"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPostDetailTimestamp"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textViewPostDetailFullText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+        app:layout_constraintEnd_toEndOf="@+id/textViewPostDetailTitle"
+        app:layout_constraintStart_toStartOf="@+id/textViewPostDetailTitle"
+        app:layout_constraintTop_toBottomOf="@+id/textViewOriginalPostLink"
+        tools:text="This is the full text of the post. It can be quite long and span multiple lines, providing all the details that the user wanted to share." />
+
+    <ImageButton
+        android:id="@+id/buttonUpvotePostDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Upvote Post"
+        app:tint="?attr/colorPrimary"
+        app:layout_constraintStart_toStartOf="@+id/textViewPostDetailFullText"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPostDetailFullText"
+        app:srcCompat="@android:drawable/arrow_up_float" />
+
+    <TextView
+        android:id="@+id/textViewUpvoteCountPostDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonUpvotePostDetail"
+        app:layout_constraintStart_toEndOf="@+id/buttonUpvotePostDetail"
+        app:layout_constraintTop_toTopOf="@+id/buttonUpvotePostDetail"
+        tools:text="0" />
+
+    <ImageButton
+        android:id="@+id/buttonDownvotePostDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Downvote Post"
+        app:tint="?attr/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonUpvotePostDetail"
+        app:layout_constraintStart_toEndOf="@+id/textViewUpvoteCountPostDetail"
+        app:layout_constraintTop_toTopOf="@+id/buttonUpvotePostDetail"
+        app:srcCompat="@android:drawable/arrow_down_float" />
+
+    <TextView
+        android:id="@+id/textViewDownvoteCountPostDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonDownvotePostDetail"
+        app:layout_constraintStart_toEndOf="@+id/buttonDownvotePostDetail"
+        app:layout_constraintTop_toTopOf="@+id/buttonDownvotePostDetail"
+        tools:text="0" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/commentInputLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:hint="Write a comment"
+        app:layout_constraintEnd_toStartOf="@+id/buttonSubmitComment"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonUpvotePostDetail">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextNewComment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/buttonSubmitComment"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="Post"
+        app:layout_constraintBottom_toBottomOf="@+id/commentInputLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/commentInputLayout" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewComments"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/commentInputLayout"
+        tools:listitem="@layout/item_comment" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

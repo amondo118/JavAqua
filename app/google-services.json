@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "234859111284",
+    "project_id": "javaqua",
+    "storage_bucket": "javaqua.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234859111284:android:c4924bd5bfc4f858304221",
+        "android_client_info": {
+          "package_name": "com.example.javaqua"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "234859111284-bu4uc432pi16s9nmr8v5ctah4p84j75f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNpOTFz7-rvafVNIVTjLlShz6kGHr7MDA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "234859111284-bu4uc432pi16s9nmr8v5ctah4p84j75f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234859111284:android:820cb63aaf874993304221",
+        "android_client_info": {
+          "package_name": "com.example.javaqua"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "234859111284-bu4uc432pi16s9nmr8v5ctah4p84j75f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNpOTFz7-rvafVNIVTjLlShz6kGHr7MDA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "234859111284-bu4uc432pi16s9nmr8v5ctah4p84j75f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

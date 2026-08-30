@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Dark Theme (Main App Look) -->
+    <color name="dark_background">#0B121C</color>
+    <color name="dark_surface">#161F2C</color>
+    <color name="dark_primary">#2196F3</color>
+    <color name="dark_on_primary">#FFFFFF</color>
+    <color name="dark_secondary">#03DAC5</color>
+    
+    <!-- Light Theme (Less Bright) -->
+    <color name="light_background">#E1E4E8</color> <!-- Grayish blue, less harsh than F5F7FA -->
+    <color name="light_surface">#F0F2F5</color> <!-- Off-white surface -->
+    <color name="light_primary">#1565C0</color> <!-- Deeper blue -->
+    <color name="light_on_primary">#FFFFFF</color>
+    <color name="light_secondary">#00796B</color>
+
+    <color name="upvote_green">#4CAF50</color>
+    <color name="downvote_red">#F44336</color>
+    <color name="name_overlay_background">#99000000</color>
+</resources>
