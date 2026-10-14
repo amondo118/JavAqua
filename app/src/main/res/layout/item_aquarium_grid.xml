@@ -37,6 +37,16 @@
             app:layout_constraintEnd_toEndOf="@+id/animatedAquariumPreview"
             app:layout_constraintBottom_toBottomOf="@+id/animatedAquariumPreview" />
 
+        <View
+            android:id="@+id/tankStatusIndicator"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/circle_indicator"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -14,12 +14,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.javaqua.R;
 import com.example.javaqua.atlas.Atlas;
 import com.example.javaqua.atlas.FishPreview;
+import com.example.javaqua.data.AppDatabase;
 import com.example.javaqua.main.ThemeUtils;
 import com.example.javaqua.main.TimestampUtils;
 import com.example.javaqua.model.Post;
@@ -31,19 +32,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ForumPostAdapter extends RecyclerView.Adapter<ForumPostAdapter.PostViewHolder> {
 
-    private List<Post> posts;
-    private Context context;
-    private OnPostInteractionListener listener;
-    private FirebaseAuth mAuth;
-    private static final String TAG = "ForumPostAdapter";
-    private final Atlas atlas;
-    private Map<String, FishPreview> fishCache = new HashMap<>();
+    private final List<Post> posts = new ArrayList<>();
+    private final Context context;
+    private final OnPostInteractionListener listener;
+    private final FirebaseAuth mAuth;
+    private final Map<String, FishPreview> fishCache = new HashMap<>();
+    private final Map<String, CharSequence> spannableCache = new HashMap<>();
+    private static final Pattern TAG_PATTERN = Pattern.compile("@([\\w\\s]+?)(?=\\s@|\\n|$)");
 
     public interface OnPostInteractionListener {
         void onPostClicked(int position);
@@ -55,28 +56,44 @@ public class ForumPostAdapter extends RecyclerView.Adapter<ForumPostAdapter.Post
         void onCommentUpvoteClicked(int postPosition, int commentPosition);
     }
 
-    public ForumPostAdapter(Context context, List<Post> posts, OnPostInteractionListener listener, FirebaseAuth auth) {
+    public ForumPostAdapter(Context context, List<Post> initialPosts, OnPostInteractionListener listener, FirebaseAuth auth) {
         this.context = context;
-        this.posts = posts;
+        if (initialPosts != null) this.posts.addAll(initialPosts);
         this.listener = listener;
         this.mAuth = auth;
-        this.atlas = new Atlas(context);
         preloadFishData();
     }
 
     private void preloadFishData() {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Atlas atlas = new Atlas(context);
             List<FishPreview> allFish = atlas.getCachedFishPreviewsList();
             if (allFish != null) {
-                Map<String, FishPreview> tempMap = new HashMap<>();
-                for (FishPreview fish : allFish) {
-                    tempMap.put(fish.getId(), fish);
-                }
-                fishCache = tempMap;
-                // If we want to refresh UI once cache is ready:
-                // ((Activity)context).runOnUiThread(this::notifyDataSetChanged);
+                for (FishPreview fish : allFish) fishCache.put(fish.getId(), fish);
+                spannableCache.clear();
             }
         });
+    }
+
+    public void updatePosts(final List<Post> newPosts) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override public int getOldListSize() { return posts.size(); }
+            @Override public int getNewListSize() { return newPosts == null ? 0 : newPosts.size(); }
+            @Override public boolean areItemsTheSame(int oldPos, int newPos) {
+                return Objects.equals(posts.get(oldPos).getPostId(), newPosts.get(newPos).getPostId());
+            }
+            @Override public boolean areContentsTheSame(int oldPos, int newPos) {
+                Post oldPost = posts.get(oldPos);
+                Post newPost = newPosts.get(newPos);
+                return oldPost.getUpvotes() == newPost.getUpvotes() &&
+                       oldPost.getDownvotes() == newPost.getDownvotes() &&
+                       oldPost.getCommentCount() == newPost.getCommentCount() &&
+                       oldPost.isExpanded() == newPost.isExpanded();
+            }
+        });
+        posts.clear();
+        if (newPosts != null) posts.addAll(newPosts);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
@@ -88,153 +105,7 @@ public class ForumPostAdapter extends RecyclerView.Adapter<ForumPostAdapter.Post
 
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
-        Post post = posts.get(holder.getAdapterPosition());
-
-        holder.usernameTextView.setText(post.getUsername());
-        holder.postLabelTextView.setText(post.getPostLabel());
-        holder.upvoteCountTextView.setText(String.valueOf(post.getUpvotes()));
-        holder.downvoteCountTextView.setText(String.valueOf(post.getDownvotes()));
-        holder.commentCountTextView.setText(String.valueOf(post.getCommentCount()));
-
-        if (post.getTimestamp() != null) {
-            holder.textViewPostTimestamp.setText(TimestampUtils.formatRelativeTimestamp(post.getTimestamp()));
-            holder.textViewPostTimestamp.setVisibility(View.VISIBLE);
-        } else {
-            holder.textViewPostTimestamp.setText("No date");
-            holder.textViewPostTimestamp.setVisibility(View.VISIBLE);
-        }
-
-        // Update Vote Button Tints
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            String currentUserId = currentUser.getUid();
-            List<String> upvotedBy = post.getUpvotedBy() != null ? post.getUpvotedBy() : new ArrayList<>();
-            List<String> downvotedBy = post.getDownvotedBy() != null ? post.getDownvotedBy() : new ArrayList<>();
-
-            if (upvotedBy.contains(currentUserId)) {
-                holder.upvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.upvoteColor));
-            } else {
-                holder.upvoteButton.clearColorFilter();
-            }
-
-            if (downvotedBy.contains(currentUserId)) {
-                holder.downvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.downvoteColor));
-            } else {
-                holder.downvoteButton.clearColorFilter();
-            }
-        } else {
-            holder.upvoteButton.clearColorFilter();
-            holder.downvoteButton.clearColorFilter();
-        }
-
-        // Fish Tags
-        holder.fishTagsLayout.removeAllViews();
-        if (post.getTaggedFishIds() != null && !post.getTaggedFishIds().isEmpty()) {
-            holder.fishTagsLayout.setVisibility(View.VISIBLE);
-            for (String fishId : post.getTaggedFishIds()) {
-                TextView tagView = new TextView(context);
-                FishPreview preview = fishCache.get(fishId);
-                if (preview != null && preview.getName() != null) {
-                    tagView.setText("@" + preview.getName());
-                } else {
-                    tagView.setText("@" + fishId);
-                }
-                tagView.setBackgroundResource(android.R.color.transparent);
-                tagView.setTextColor(ThemeUtils.getThemeColor(context, R.attr.tagTextColor));
-                tagView.setPadding(12, 6, 12, 6);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                params.setMargins(0, 0, 8, 0);
-                tagView.setLayoutParams(params);
-                tagView.setOnClickListener(v -> {
-                    if (listener != null) {
-                        listener.onFishTagClicked(fishId);
-                    }
-                });
-                holder.fishTagsLayout.addView(tagView);
-            }
-        } else {
-            holder.fishTagsLayout.setVisibility(View.GONE);
-        }
-
-        if (post.isExpanded()) {
-            holder.expandedContentPlaceholder.setVisibility(View.VISIBLE);
-            String fullText = post.getFullText();
-
-            if (!TextUtils.isEmpty(fullText) && context != null) {
-                SpannableString spannableString = new SpannableString(fullText);
-                List<FishPreview> sortedFishPreviews = new ArrayList<>(fishCache.values());
-                
-                if (!sortedFishPreviews.isEmpty()) {
-                    Collections.sort(sortedFishPreviews, (f1, f2) -> {
-                        String name1 = f1.getName();
-                        String name2 = f2.getName();
-                        if (name1 == null && name2 == null) return 0;
-                        if (name1 == null) return 1;
-                        if (name2 == null) return -1;
-                        return Integer.compare(name2.length(), name1.length());
-                    });
-
-                    Pattern pattern = Pattern.compile("@([\\w\\s]+?)(?=\\s@|\\n|$)");
-                    Matcher matcher = pattern.matcher(fullText);
-
-                    while (matcher.find()) {
-                        String fishNamePartFromRegex = matcher.group(1);
-                        if (fishNamePartFromRegex != null) {
-                            String trimmedMention = fishNamePartFromRegex.trim();
-                            for (FishPreview fish : sortedFishPreviews) {
-                                if (fish.getName() != null && !fish.getName().isEmpty()) {
-                                    String actualFishName = fish.getName().trim();
-                                    if (trimmedMention.toLowerCase().startsWith(actualFishName.toLowerCase())) {
-                                        final String clickedFishId = fish.getId();
-                                        ClickableSpan clickableSpan = new ClickableSpan() {
-                                            @Override
-                                            public void onClick(@NonNull View widget) {
-                                                if (listener != null) {
-                                                    listener.onFishTagClicked(clickedFishId);
-                                                }
-                                            }
-                                        };
-
-                                        ForegroundColorSpan colorSpan = new ForegroundColorSpan(ThemeUtils.getThemeColor(context, R.attr.tagTextColor));
-                                        int spanStart = matcher.start(0);
-                                        int spanEnd = spanStart + "@".length() + actualFishName.length();
-
-                                        if (spanStart >= 0 && spanEnd <= spannableString.length() && spanStart < spanEnd) {
-                                            spannableString.setSpan(clickableSpan, spanStart, spanEnd, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                            spannableString.setSpan(colorSpan, spanStart, spanEnd, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                holder.fullTextView.setText(spannableString);
-                holder.fullTextView.setMovementMethod(LinkMovementMethod.getInstance());
-            } else {
-                holder.fullTextView.setText(fullText);
-            }
-        } else {
-            holder.expandedContentPlaceholder.setVisibility(View.GONE);
-        }
-
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onPostClicked(holder.getAdapterPosition());
-        });
-
-        holder.upvoteButton.setOnClickListener(v -> {
-            if (listener != null) listener.onUpvoteClicked(holder.getAdapterPosition());
-        });
-        holder.downvoteButton.setOnClickListener(v -> {
-            if (listener != null) listener.onDownvoteClicked(holder.getAdapterPosition());
-        });
-        holder.commentButton.setOnClickListener(v -> {
-            if (listener != null) listener.onCommentClicked(holder.getAdapterPosition());
-        });
-        holder.repostButton.setOnClickListener(v -> {
-            if (listener != null) listener.onRepostClicked(holder.getAdapterPosition());
-        });
+        holder.bind(posts.get(position));
     }
 
     @Override
@@ -242,21 +113,15 @@ public class ForumPostAdapter extends RecyclerView.Adapter<ForumPostAdapter.Post
         return posts.size();
     }
 
-    public void updatePosts(List<Post> newPosts) {
-        this.posts = newPosts;
-        notifyDataSetChanged();
-    }
-
     public List<Post> getPosts() {
-        return posts;
+        return new ArrayList<>(posts);
     }
 
-    static class PostViewHolder extends RecyclerView.ViewHolder {
+    class PostViewHolder extends RecyclerView.ViewHolder {
         TextView usernameTextView, postLabelTextView, upvoteCountTextView, downvoteCountTextView, commentCountTextView, textViewPostTimestamp;
         LinearLayout fishTagsLayout, expandedContentPlaceholder;
         ImageButton upvoteButton, downvoteButton, commentButton, repostButton;
         TextView fullTextView;
-        RecyclerView commentsRecyclerView;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -272,8 +137,97 @@ public class ForumPostAdapter extends RecyclerView.Adapter<ForumPostAdapter.Post
             fishTagsLayout = itemView.findViewById(R.id.fishTagsLayout);
             expandedContentPlaceholder = itemView.findViewById(R.id.expandedContentPlaceholder);
             fullTextView = itemView.findViewById(R.id.fullTextView);
-            commentsRecyclerView = itemView.findViewById(R.id.recyclerViewComments);
             textViewPostTimestamp = itemView.findViewById(R.id.textViewPostTimestamp);
+        }
+
+        void bind(Post post) {
+            usernameTextView.setText(post.getUsername());
+            postLabelTextView.setText(post.getPostLabel());
+            upvoteCountTextView.setText(String.valueOf(post.getUpvotes()));
+            downvoteCountTextView.setText(String.valueOf(post.getDownvotes()));
+            commentCountTextView.setText(String.valueOf(post.getCommentCount()));
+
+            if (post.getTimestamp() != null) {
+                textViewPostTimestamp.setText(TimestampUtils.formatRelativeTimestamp(post.getTimestamp()));
+            } else {
+                textViewPostTimestamp.setText("No date");
+            }
+
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                String uid = currentUser.getUid();
+                if (post.getUpvotedBy() != null && post.getUpvotedBy().contains(uid)) {
+                    upvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.upvoteColor));
+                } else {
+                    upvoteButton.clearColorFilter();
+                }
+                if (post.getDownvotedBy() != null && post.getDownvotedBy().contains(uid)) {
+                    downvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.downvoteColor));
+                } else {
+                    downvoteButton.clearColorFilter();
+                }
+            }
+
+            fishTagsLayout.removeAllViews();
+            if (post.getTaggedFishIds() != null && !post.getTaggedFishIds().isEmpty()) {
+                fishTagsLayout.setVisibility(View.VISIBLE);
+                for (String fid : post.getTaggedFishIds()) {
+                    TextView tv = new TextView(context);
+                    FishPreview p = fishCache.get(fid);
+                    tv.setText("@" + (p != null ? p.getName() : fid));
+                    tv.setTextColor(ThemeUtils.getThemeColor(context, R.attr.tagTextColor));
+                    tv.setPadding(8, 4, 8, 4);
+                    tv.setOnClickListener(v -> listener.onFishTagClicked(fid));
+                    fishTagsLayout.addView(tv);
+                }
+            } else {
+                fishTagsLayout.setVisibility(View.GONE);
+            }
+
+            if (post.isExpanded()) {
+                expandedContentPlaceholder.setVisibility(View.VISIBLE);
+                
+                CharSequence cached = spannableCache.get(post.getPostId());
+                if (cached != null) {
+                    fullTextView.setText(cached);
+                } else {
+                    CharSequence built = buildSpannable(post.getFullText());
+                    spannableCache.put(post.getPostId(), built);
+                    fullTextView.setText(built);
+                }
+                fullTextView.setMovementMethod(LinkMovementMethod.getInstance());
+            } else {
+                expandedContentPlaceholder.setVisibility(View.GONE);
+            }
+
+            itemView.setOnClickListener(v -> listener.onPostClicked(getAdapterPosition()));
+            upvoteButton.setOnClickListener(v -> listener.onUpvoteClicked(getAdapterPosition()));
+            downvoteButton.setOnClickListener(v -> listener.onDownvoteClicked(getAdapterPosition()));
+            commentButton.setOnClickListener(v -> listener.onCommentClicked(getAdapterPosition()));
+            repostButton.setOnClickListener(v -> listener.onRepostClicked(getAdapterPosition()));
+        }
+
+        private SpannableString buildSpannable(String text) {
+            if (TextUtils.isEmpty(text)) return new SpannableString("");
+            SpannableString ss = new SpannableString(text);
+            Matcher matcher = TAG_PATTERN.matcher(text);
+            while (matcher.find()) {
+                String mention = matcher.group(1);
+                if (mention == null) continue;
+                String q = mention.trim().toLowerCase();
+                for (FishPreview f : fishCache.values()) {
+                    if (f.getName() != null && f.getName().toLowerCase().equals(q)) {
+                        int start = matcher.start();
+                        int end = matcher.end();
+                        ss.setSpan(new ClickableSpan() {
+                            @Override public void onClick(@NonNull View w) { listener.onFishTagClicked(f.getId()); }
+                        }, start, end, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        ss.setSpan(new ForegroundColorSpan(ThemeUtils.getThemeColor(context, R.attr.tagTextColor)), start, end, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        break;
+                    }
+                }
+            }
+            return ss;
         }
     }
 }

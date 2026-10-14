@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey;
 import com.example.javaqua.atlas.FishPreview;
 
 import java.util.List;
+import java.util.Map;
 
 @Entity(tableName = "aquariums")
 public class RoomAquarium {
@@ -17,18 +18,18 @@ public class RoomAquarium {
     private String name;
     private double volumeLiters;
     private double temperature;
-    private List<String> fishIDs;
+    private Map<String, Integer> fishCounts;
     private String background;
     private List<FishPreview> embeddedFishPreviews;
 
     public RoomAquarium(String id, String ownerID, String name, double volumeLiters, double temperature,
-                        List<String> fishIDs, String background, List<FishPreview> embeddedFishPreviews) {
+                        Map<String, Integer> fishCounts, String background, List<FishPreview> embeddedFishPreviews) {
         this.id = id;
         this.ownerID = ownerID;
         this.name = name;
         this.volumeLiters = volumeLiters;
         this.temperature = temperature;
-        this.fishIDs = fishIDs;
+        this.fishCounts = fishCounts;
         this.background = background;
         this.embeddedFishPreviews = embeddedFishPreviews;
     }
@@ -38,7 +39,7 @@ public class RoomAquarium {
     public String getName() { return name; }
     public double getVolumeLiters() { return volumeLiters; }
     public double getTemperature() { return temperature; }
-    public List<String> getFishIDs() { return fishIDs; }
+    public Map<String, Integer> getFishCounts() { return fishCounts; }
     public String getBackground() { return background; }
     public List<FishPreview> getEmbeddedFishPreviews() { return embeddedFishPreviews; }
 
@@ -47,7 +48,7 @@ public class RoomAquarium {
     public void setName(String name) { this.name = name; }
     public void setVolumeLiters(double volumeLiters) { this.volumeLiters = volumeLiters; }
     public void setTemperature(double temperature) { this.temperature = temperature; }
-    public void setFishIDs(List<String> fishIDs) { this.fishIDs = fishIDs; }
+    public void setFishCounts(Map<String, Integer> fishCounts) { this.fishCounts = fishCounts; }
     public void setBackground(String background) { this.background = background; }
     public void setEmbeddedFishPreviews(List<FishPreview> embeddedFishPreviews) { this.embeddedFishPreviews = embeddedFishPreviews; }
 }

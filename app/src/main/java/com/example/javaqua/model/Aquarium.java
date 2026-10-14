@@ -1,9 +1,13 @@
 package com.example.javaqua.model;
 
 import com.example.javaqua.atlas.FishPreview;
+import com.google.firebase.firestore.Exclude;
 import com.google.firebase.firestore.PropertyName;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Aquarium {
     private String id;
@@ -16,71 +20,73 @@ public class Aquarium {
     @PropertyName("temperature")
     private double temperature;
 
-    @PropertyName("fishes")
-    private List<String> fishIDs;
+    // Field name in class does NOT match Firestore to avoid automatic deserialization crash
+    private Map<String, Integer> fishCounts = new HashMap<>();
 
     @PropertyName("background")
     private String background;
 
-
-
-
     private List<FishPreview> embeddedFishPreviews;
-
 
     public Aquarium() {}
 
-
-    public Aquarium(String id, String ownerID, String name, double volumeLiters, double temperature,
-                    List<String> fishIDs, String background, List<FishPreview> embeddedFishPreviews) {
-        this.id = id;
-        this.ownerID = ownerID;
-        this.name = name;
-        this.volumeLiters = volumeLiters;
-        this.temperature = temperature;
-        this.fishIDs = fishIDs;
-        this.background = background;
-        this.embeddedFishPreviews = embeddedFishPreviews;
-    }
-
-
     public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getOwnerID() { return ownerID; }
+    public void setOwnerID(String ownerID) { this.ownerID = ownerID; }
     public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     @PropertyName("volume")
     public double getVolumeLiters() { return volumeLiters; }
-
-    @PropertyName("temperature")
-    public double getTemperature() { return temperature; }
-
-    @PropertyName("fishes")
-    public List<String> getFishIDs() { return fishIDs; }
-
-    @PropertyName("background")
-    public String getBackground() { return background; }
-
-
-    public List<FishPreview> getEmbeddedFishPreviews() { return embeddedFishPreviews; }
-
-
-    public void setId(String id) { this.id = id; }
-    public void setOwnerID(String ownerID) { this.ownerID = ownerID; }
-    public void setName(String name) { this.name = name; }
-
     @PropertyName("volume")
     public void setVolumeLiters(double volumeLiters) { this.volumeLiters = volumeLiters; }
 
     @PropertyName("temperature")
+    public double getTemperature() { return temperature; }
+    @PropertyName("temperature")
     public void setTemperature(double temperature) { this.temperature = temperature; }
 
+    // Manual handling of "fishes" field to support both Map (new) and List (legacy)
     @PropertyName("fishes")
-    public void setFishIDs(List<String> fishIDs) { this.fishIDs = fishIDs; }
+    public Object getFishes() {
+        return fishCounts;
+    }
 
+    @PropertyName("fishes")
+    public void setFishes(Object fishesObj) {
+        this.fishCounts = new HashMap<>();
+        if (fishesObj instanceof Map) {
+            Map<?, ?> rawMap = (Map<?, ?>) fishesObj;
+            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                if (entry.getKey() instanceof String && entry.getValue() instanceof Number) {
+                    fishCounts.put((String) entry.getKey(), ((Number) entry.getValue()).intValue());
+                }
+            }
+        } else if (fishesObj instanceof List) {
+            List<?> rawList = (List<?>) fishesObj;
+            for (Object item : rawList) {
+                if (item instanceof String) {
+                    String fid = (String) item;
+                    fishCounts.put(fid, fishCounts.getOrDefault(fid, 0) + 1);
+                }
+            }
+        }
+    }
+
+    @Exclude
+    public Map<String, Integer> getFishCounts() {
+        return fishCounts;
+    }
+
+    @PropertyName("background")
+    public String getBackground() { return background; }
     @PropertyName("background")
     public void setBackground(String background) { this.background = background; }
 
-
+    @Exclude
+    public List<FishPreview> getEmbeddedFishPreviews() { return embeddedFishPreviews; }
+    @Exclude
     public void setEmbeddedFishPreviews(List<FishPreview> embeddedFishPreviews) {
         this.embeddedFishPreviews = embeddedFishPreviews;
     }

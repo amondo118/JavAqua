@@ -1,6 +1,8 @@
 package com.example.javaqua.atlas;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,11 +16,14 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.javaqua.R;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FishAdapterForDetailView extends RecyclerView.Adapter<FishAdapterForDetailView.ViewHolder> {
 
     private List<FishPreview> fishPreviewList;
+    private Map<String, Integer> counts = new HashMap<>();
     private OnFishItemClickListener listener;
     private Context context;
 
@@ -33,6 +38,11 @@ public class FishAdapterForDetailView extends RecyclerView.Adapter<FishAdapterFo
         this.listener = listener;
     }
 
+    public void setCounts(Map<String, Integer> counts) {
+        this.counts = counts != null ? counts : new HashMap<>();
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -44,7 +54,8 @@ public class FishAdapterForDetailView extends RecyclerView.Adapter<FishAdapterFo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         FishPreview fishPreview = fishPreviewList.get(position);
-        holder.bind(fishPreview, position, listener);
+        int count = counts.getOrDefault(fishPreview.getId(), 1);
+        holder.bind(fishPreview, count, position, listener);
     }
 
     @Override
@@ -57,28 +68,40 @@ public class FishAdapterForDetailView extends RecyclerView.Adapter<FishAdapterFo
         notifyDataSetChanged();
     }
 
-    public void itemUpdated(int position) {
-        notifyItemChanged(position);
-    }
-
     class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         TextView nameView;
         TextView latinView;
         TextView descriptionView;
+        View ratingIndicator;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Initializing views from item_fish_preview.xml
             imageView = itemView.findViewById(R.id.imageView);
             nameView = itemView.findViewById(R.id.nameView);
             latinView = itemView.findViewById(R.id.latinView);
             descriptionView = itemView.findViewById(R.id.descriptionView);
+            ratingIndicator = itemView.findViewById(R.id.ratingIndicator);
         }
 
-        public void bind(final FishPreview fishPreview, final int position, final OnFishItemClickListener listener) {
-            nameView.setText(fishPreview.getName());
+        public void bind(final FishPreview fishPreview, int count, final int position, final OnFishItemClickListener listener) {
+            String nameText = fishPreview.getName();
+            if (count > 1) nameText += " (x" + count + ")";
+            nameView.setText(nameText);
+            
             latinView.setText(fishPreview.getLatin());
+
+            if (fishPreview.getSuggestionRating() != SuggestionEngine.Rating.UNKNOWN) {
+                ratingIndicator.setVisibility(View.VISIBLE);
+                GradientDrawable drawable = (GradientDrawable) ratingIndicator.getBackground();
+                switch (fishPreview.getSuggestionRating()) {
+                    case GREEN: drawable.setColor(Color.GREEN); break;
+                    case YELLOW: drawable.setColor(Color.YELLOW); break;
+                    case RED: drawable.setColor(Color.RED); break;
+                }
+            } else {
+                ratingIndicator.setVisibility(View.GONE);
+            }
 
             RequestOptions glideOptions = new RequestOptions()
                     .placeholder(R.drawable.ic_launcher_background)
@@ -95,7 +118,7 @@ public class FishAdapterForDetailView extends RecyclerView.Adapter<FishAdapterFo
             } else {
                 descriptionView.setVisibility(View.GONE);
                 Glide.with(context)
-                        .load(fishPreview.getImageSML())
+                        .load(fishPreview.getImageUrl()) // Preview usually wants imageURL or SML
                         .apply(glideOptions)
                         .into(imageView);
             }

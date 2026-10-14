@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 
 public class Converters {
     private static Gson gson = new Gson();
@@ -30,7 +31,18 @@ public class Converters {
     }
 
     @TypeConverter
-    public static String fromFishPreviewList(List<FishPreview> list) {
+    public static String fromListToFishPreview(List<FishPreview> list) {
         return gson.toJson(list);
+    }
+
+    @TypeConverter
+    public static Map<String, Integer> fromMapString(String value) {
+        Type mapType = new TypeToken<Map<String, Integer>>() {}.getType();
+        return gson.fromJson(value, mapType);
+    }
+
+    @TypeConverter
+    public static String fromMap(Map<String, Integer> map) {
+        return gson.toJson(map);
     }
 }

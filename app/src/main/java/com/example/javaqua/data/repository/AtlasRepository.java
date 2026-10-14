@@ -14,7 +14,6 @@ import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 public class AtlasRepository {
     private final FirebaseFirestore db;
@@ -42,15 +41,15 @@ public class AtlasRepository {
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
-                        List<RoomFishPreview> roomFishPreviews = new ArrayList<>();
-                        task.getResult().forEach(document -> {
-                            FishPreview preview = document.toObject(FishPreview.class);
-                            if (preview != null) {
-                                preview.setId(document.getId());
-                                roomFishPreviews.add(mapToRoom(preview));
-                            }
-                        });
-                        Executors.newSingleThreadExecutor().execute(() -> {
+                        AppDatabase.databaseWriteExecutor.execute(() -> {
+                            List<RoomFishPreview> roomFishPreviews = new ArrayList<>();
+                            task.getResult().forEach(document -> {
+                                FishPreview preview = document.toObject(FishPreview.class);
+                                if (preview != null) {
+                                    preview.setId(document.getId());
+                                    roomFishPreviews.add(mapToRoom(preview));
+                                }
+                            });
                             fishPreviewDao.insertAll(roomFishPreviews);
                             loadCachedPreviews();
                             isSyncing.postValue(false);
@@ -62,7 +61,7 @@ public class AtlasRepository {
     }
 
     public void loadCachedPreviews() {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             List<RoomFishPreview> roomPreviews = fishPreviewDao.getAllFishPreviewsAlphabetical();
             List<FishPreview> previews = new ArrayList<>();
             roomPreviews.forEach(rp -> previews.add(mapFromRoom(rp)));
@@ -71,7 +70,7 @@ public class AtlasRepository {
     }
 
     public void searchPreviews(String query) {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             List<RoomFishPreview> roomPreviews = fishPreviewDao.searchFishPreviews(query);
             List<FishPreview> previews = new ArrayList<>();
             roomPreviews.forEach(rp -> previews.add(mapFromRoom(rp)));
@@ -80,14 +79,36 @@ public class AtlasRepository {
     }
 
     private RoomFishPreview mapToRoom(FishPreview p) {
-        return new RoomFishPreview(p.getId(), p.getName(), p.getLatin(), p.getImageUrl(), p.getImageSML(),
-                p.getCompatibility(), p.getMinTankSize(), p.getTemperature(), p.getPh(), p.getHardness(),
-                p.getTemperament(), p.getDiet(), p.getCareLevel(), p.getDescription(), p.getSprite());
+        RoomFishPreview rp = new RoomFishPreview();
+        rp.setId(p.getId());
+        rp.setName(p.getName());
+        rp.setLatin(p.getLatin());
+        rp.setImageUrl(p.getImageUrl());
+        rp.setImageSML(p.getImageSML());
+        rp.setDescription(p.getDescription());
+        rp.setShortDescription(p.getShortDescription());
+        rp.setDifficulty(p.getDifficulty());
+        rp.setMinVolume(p.getMinVolume());
+        rp.setMinTemp(p.getMinTemp());
+        rp.setMaxTemp(p.getMaxTemp());
+        rp.setSprite(p.getSprite());
+        return rp;
     }
 
     private FishPreview mapFromRoom(RoomFishPreview rp) {
-        return new FishPreview(rp.getId(), rp.getName(), rp.getLatin(), rp.getImageUrl(), rp.getImageSML(),
-                rp.getCompatibility(), rp.getMinTankSize(), rp.getTemperature(), rp.getPh(), rp.getHardness(),
-                rp.getTemperament(), rp.getDiet(), rp.getCareLevel(), rp.getDescription(), rp.getSprite());
+        FishPreview p = new FishPreview();
+        p.setId(rp.getId());
+        p.setName(rp.getName());
+        p.setLatin(rp.getLatin());
+        p.setImageUrl(rp.getImageUrl());
+        p.setImageSML(rp.getImageSML());
+        p.setDescription(rp.getDescription());
+        p.setShortDescription(rp.getShortDescription());
+        p.setDifficulty(rp.getDifficulty());
+        p.setMinVolume(rp.getMinVolume());
+        p.setMinTemp(rp.getMinTemp());
+        p.setMaxTemp(rp.getMaxTemp());
+        p.setSprite(rp.getSprite());
+        return p;
     }
 }

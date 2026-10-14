@@ -56,6 +56,7 @@ public class CreatePostFragment extends Fragment {
     private final List<FishPreview> availableFishPreviews = new ArrayList<>();
     private final List<ForegroundColorSpan> appliedSpans = new ArrayList<>();
     private Atlas atlas;
+    private static final Pattern TAG_PATTERN = Pattern.compile("@([\\w\\s]+?)(?=\\s@|\\n|$)");
 
 
     public CreatePostFragment() {
@@ -162,8 +163,7 @@ public class CreatePostFragment extends Fragment {
         if (availableFishPreviews.isEmpty()) return;
         if (getContext() == null) return;
 
-        Pattern pattern = Pattern.compile("@([\\w\\s]+?)(?=\\s@|\\n|$)");
-        Matcher matcher = pattern.matcher(s.toString());
+        Matcher matcher = TAG_PATTERN.matcher(s.toString());
 
         while (matcher.find()) {
             String fishNameMention = matcher.group(1); 

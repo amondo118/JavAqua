@@ -8,7 +8,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.javaqua.R;
@@ -20,13 +20,14 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
-    private List<Comment> comments;
-    private Context context;
-    private CommentItemListener itemListener;
-    private FirebaseAuth mAuth; 
+    private List<Comment> comments = new ArrayList<>();
+    private final Context context;
+    private final CommentItemListener itemListener;
+    private final FirebaseAuth mAuth; 
 
     public interface CommentItemListener {
         void onCommentUpvoteClicked(int position);
@@ -34,9 +35,9 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         void onCommentReplyClicked(int position);
     }
 
-    public CommentAdapter(Context context, List<Comment> comments, CommentItemListener itemListener, FirebaseAuth auth) {
+    public CommentAdapter(Context context, List<Comment> initialComments, CommentItemListener itemListener, FirebaseAuth auth) {
         this.context = context;
-        this.comments = comments;
+        if (initialComments != null) this.comments.addAll(initialComments);
         this.itemListener = itemListener;
         this.mAuth = auth; 
     }
@@ -44,78 +45,41 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     @NonNull
     @Override
     public CommentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_comment, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_comment, parent, false);
         return new CommentViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {
-        Comment comment = comments.get(holder.getAdapterPosition());
-
-        holder.usernameTextView.setText(comment.getUsername());
-        holder.commentTextView.setText(comment.getText());
-
-        if (comment.getTimestamp() != null) {
-            holder.timestampTextView.setText(TimestampUtils.formatRelativeTimestamp(comment.getTimestamp())); // Changed to use TimestampUtils
-        } else {
-            holder.timestampTextView.setText("No timestamp");
-        }
-
-        holder.upvoteCountTextView.setText(String.valueOf(comment.getUpvotes()));
-        holder.downvoteCountTextView.setText(String.valueOf(comment.getDownvotes()));
-
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            String currentUserId = currentUser.getUid();
-            List<String> upvotedBy = comment.getUpvotedBy() != null ? comment.getUpvotedBy() : new ArrayList<>();
-            List<String> downvotedBy = comment.getDownvotedBy() != null ? comment.getDownvotedBy() : new ArrayList<>();
-
-            if (upvotedBy.contains(currentUserId)) {
-                holder.upvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.upvoteColor));
-            } else {
-                holder.upvoteButton.clearColorFilter();
-            }
-
-            if (downvotedBy.contains(currentUserId)) {
-                holder.downvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.downvoteColor));
-            } else {
-                holder.downvoteButton.clearColorFilter();
-            }
-        } else {
-            holder.upvoteButton.clearColorFilter();
-            holder.downvoteButton.clearColorFilter();
-        }
-
-        holder.upvoteButton.setOnClickListener(v -> {
-            if (itemListener != null) {
-                itemListener.onCommentUpvoteClicked(holder.getAdapterPosition());
-            }
-        });
-
-        holder.downvoteButton.setOnClickListener(v -> {
-            if (itemListener != null) {
-                itemListener.onCommentDownvoteClicked(holder.getAdapterPosition());
-            }
-        });
-
-        holder.replyButton.setOnClickListener(v -> {
-            if (itemListener != null) {
-                itemListener.onCommentReplyClicked(holder.getAdapterPosition());
-            }
-        });
+        holder.bind(comments.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return comments != null ? comments.size() : 0;
+        return comments.size();
     }
 
-    public void updateComments(List<Comment> newComments) {
-        this.comments = newComments;
-        notifyDataSetChanged();
+    public void updateComments(final List<Comment> newComments) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override public int getOldListSize() { return comments.size(); }
+            @Override public int getNewListSize() { return newComments == null ? 0 : newComments.size(); }
+            @Override public boolean areItemsTheSame(int oldPos, int newPos) {
+                return Objects.equals(comments.get(oldPos).getCommentId(), newComments.get(newPos).getCommentId());
+            }
+            @Override public boolean areContentsTheSame(int oldPos, int newPos) {
+                Comment oldItem = comments.get(oldPos);
+                Comment newItem = newComments.get(newPos);
+                return oldItem.getUpvotes() == newItem.getUpvotes() &&
+                       oldItem.getDownvotes() == newItem.getDownvotes() &&
+                       Objects.equals(oldItem.getText(), newItem.getText());
+            }
+        });
+        comments.clear();
+        if (newComments != null) comments.addAll(newComments);
+        diffResult.dispatchUpdatesTo(this);
     }
 
-    static class CommentViewHolder extends RecyclerView.ViewHolder {
+    class CommentViewHolder extends RecyclerView.ViewHolder {
         TextView usernameTextView, commentTextView, timestampTextView, upvoteCountTextView, downvoteCountTextView;
         ImageButton upvoteButton, downvoteButton, replyButton;
 
@@ -129,6 +93,39 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             downvoteButton = itemView.findViewById(R.id.buttonCommentDownvote);
             downvoteCountTextView = itemView.findViewById(R.id.textViewCommentDownvoteCount);
             replyButton = itemView.findViewById(R.id.buttonCommentReply);
+        }
+
+        void bind(Comment comment) {
+            usernameTextView.setText(comment.getUsername());
+            commentTextView.setText(comment.getText());
+
+            if (comment.getTimestamp() != null) {
+                timestampTextView.setText(TimestampUtils.formatRelativeTimestamp(comment.getTimestamp()));
+            } else {
+                timestampTextView.setText("No timestamp");
+            }
+
+            upvoteCountTextView.setText(String.valueOf(comment.getUpvotes()));
+            downvoteCountTextView.setText(String.valueOf(comment.getDownvotes()));
+
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                String uid = currentUser.getUid();
+                if (comment.getUpvotedBy() != null && comment.getUpvotedBy().contains(uid)) {
+                    upvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.upvoteColor));
+                } else {
+                    upvoteButton.clearColorFilter();
+                }
+                if (comment.getDownvotedBy() != null && comment.getDownvotedBy().contains(uid)) {
+                    downvoteButton.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.downvoteColor));
+                } else {
+                    downvoteButton.clearColorFilter();
+                }
+            }
+
+            upvoteButton.setOnClickListener(v -> itemListener.onCommentUpvoteClicked(getAdapterPosition()));
+            downvoteButton.setOnClickListener(v -> itemListener.onCommentDownvoteClicked(getAdapterPosition()));
+            replyButton.setOnClickListener(v -> itemListener.onCommentReplyClicked(getAdapterPosition()));
         }
     }
 }

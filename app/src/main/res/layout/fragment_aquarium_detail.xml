@@ -12,33 +12,63 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/textViewAquariumNameLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Aquarium Name:"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
             android:id="@+id/textViewAquariumName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:textColor="?android:attr/textColorPrimary"
-            android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-            app:layout_constraintBaseline_toBaselineOf="@+id/textViewAquariumNameLabel"
-            app:layout_constraintStart_toEndOf="@+id/textViewAquariumNameLabel"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonCompatibility"
             tools:text="My Awesome Tank" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonCompatibility"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Health"
+            android:textSize="11sp"
+            app:icon="@android:drawable/ic_dialog_info"
+            app:layout_constraintEnd_toStartOf="@+id/buttonEditAquarium"
+            app:layout_constraintTop_toTopOf="parent"
+            android:paddingHorizontal="8dp" />
+
+        <ImageButton
+            android:id="@+id/buttonEditAquarium"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:srcCompat="@android:drawable/ic_menu_edit"
+            app:tint="?attr/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="Edit Aquarium" />
+
+        <!-- Compatibility Messages Dropdown -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCompatibilityMessages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:layout_constraintTop_toBottomOf="@id/buttonEditAquarium"
+            tools:visibility="visible">
+            <LinearLayout
+                android:id="@+id/layoutMessages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp" />
+        </com.google.android.material.card.MaterialCardView>
 
         <com.example.javaqua.myaqua.AnimatedAquariumView
             android:id="@+id/animatedAquariumView"
             android:layout_width="0dp"
-            android:layout_height="200dp"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/textViewAquariumName"
+            android:layout_height="220dp"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@+id/cardCompatibilityMessages"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -48,7 +78,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Volume (Liters):"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/animatedAquariumView" />
 
@@ -57,6 +87,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBaseline_toBaselineOf="@+id/textViewAquariumVolumeLabel"
             app:layout_constraintStart_toEndOf="@+id/textViewAquariumVolumeLabel"
             app:layout_constraintEnd_toEndOf="parent"
@@ -68,7 +99,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Temperature (°C):"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewAquariumVolumeLabel" />
 
@@ -77,6 +108,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBaseline_toBaselineOf="@+id/textViewAquariumTemperatureLabel"
             app:layout_constraintStart_toEndOf="@+id/textViewAquariumTemperatureLabel"
             app:layout_constraintEnd_toEndOf="parent"
@@ -87,15 +119,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Fish in this Aquarium"
-            android:textColor="?android:attr/textColorPrimary"
+            android:text="Inhabitants"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewAquariumTemperature" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewFishInAquarium"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@+id/textViewFishInAquariumTitle"
@@ -103,7 +134,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:nestedScrollingEnabled="false"
-            tools:listitem="@layout/item_fish_preview" /> <!-- tools:listitem for preview -->
+            tools:listitem="@layout/item_fish_preview" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

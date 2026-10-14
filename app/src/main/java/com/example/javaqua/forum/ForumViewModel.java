@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.javaqua.data.AppDatabase;
 import com.example.javaqua.data.repository.ForumRepository;
 import com.example.javaqua.model.Post;
 
@@ -48,42 +49,51 @@ public class ForumViewModel extends ViewModel {
     }
 
     private void filterAndSortPosts(List<Post> allPosts) {
-        if (allPosts == null) return;
-        
-        List<Post> filtered = new ArrayList<>();
-        String query = currentSearchQuery.toLowerCase().trim();
-
-        for (Post post : allPosts) {
-            boolean matches = true;
-            if (!query.isEmpty()) {
-                boolean labelMatches = post.getPostLabel() != null && post.getPostLabel().toLowerCase().contains(query);
-                boolean textMatches = post.getFullText() != null && post.getFullText().toLowerCase().contains(query);
-                boolean userMatches = post.getUsername() != null && post.getUsername().toLowerCase().contains(query);
-                matches = labelMatches || textMatches || userMatches;
-            }
-            if (matches) {
-                filtered.add(post);
-            }
+        if (allPosts == null) {
+            displayedPosts.postValue(null);
+            return;
         }
+        
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            List<Post> filtered = new ArrayList<>();
+            String query = currentSearchQuery.toLowerCase().trim();
 
-        Collections.sort(filtered, (p1, p2) -> {
-            switch (currentSortPosition) {
-                case 0: // Newest
-                    if (p1.getTimestamp() == null || p2.getTimestamp() == null) return 0;
-                    return p2.getTimestamp().compareTo(p1.getTimestamp());
-                case 1: // Oldest
-                    if (p1.getTimestamp() == null || p2.getTimestamp() == null) return 0;
-                    return p1.getTimestamp().compareTo(p2.getTimestamp());
-                case 2: // Top (Upvotes)
-                    return Integer.compare(p2.getUpvotes(), p1.getUpvotes());
-                case 3: // Most Comments
-                    return Integer.compare(p2.getCommentCount(), p1.getCommentCount());
-                default:
-                    return 0;
+            for (Post post : allPosts) {
+                boolean matches = true;
+                if (!query.isEmpty()) {
+                    boolean labelMatches = post.getPostLabel() != null && post.getPostLabel().toLowerCase().contains(query);
+                    boolean textMatches = post.getFullText() != null && post.getFullText().toLowerCase().contains(query);
+                    boolean userMatches = post.getUsername() != null && post.getUsername().toLowerCase().contains(query);
+                    matches = labelMatches || textMatches || userMatches;
+                }
+                if (matches) {
+                    filtered.add(post);
+                }
             }
-        });
 
-        displayedPosts.setValue(filtered);
+            Collections.sort(filtered, (p1, p2) -> {
+                switch (currentSortPosition) {
+                    case 0: // Newest
+                        if (p1.getTimestamp() == null && p2.getTimestamp() == null) return 0;
+                        if (p1.getTimestamp() == null) return 1;
+                        if (p2.getTimestamp() == null) return -1;
+                        return p2.getTimestamp().compareTo(p1.getTimestamp());
+                    case 1: // Oldest
+                        if (p1.getTimestamp() == null && p2.getTimestamp() == null) return 0;
+                        if (p1.getTimestamp() == null) return 1;
+                        if (p2.getTimestamp() == null) return -1;
+                        return p1.getTimestamp().compareTo(p2.getTimestamp());
+                    case 2: // Top
+                        return Integer.compare(p2.getUpvotes(), p1.getUpvotes());
+                    case 3: // Comments
+                        return Integer.compare(p2.getCommentCount(), p1.getCommentCount());
+                    default:
+                        return 0;
+                }
+            });
+
+            displayedPosts.postValue(filtered);
+        });
     }
 
     public LiveData<List<Post>> getSourcePosts() {

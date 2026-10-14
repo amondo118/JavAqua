@@ -3,6 +3,7 @@ package com.example.javaqua.main;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
@@ -17,13 +18,15 @@ import com.example.javaqua.R;
 import com.example.javaqua.atlas.Atlas;
 import com.example.javaqua.atlas.AtlasFragment;
 import com.example.javaqua.forum.ForumFragment;
-import com.example.javaqua.myaqua.AquariumSync;
 import com.example.javaqua.myaqua.MyAquariumFragment;
 import com.example.javaqua.profile.SettingsFragment;
+import com.example.javaqua.data.repository.AquariumRepository;
+import com.example.javaqua.data.DataRepairUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private FirebaseAuth auth;
     private final FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -34,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Apply theme before super.onCreate
         SharedPreferences sharedPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         int savedTheme = sharedPrefs.getInt(KEY_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(savedTheme);
@@ -42,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         auth = FirebaseAuth.getInstance();
 
-        // Immediate check: If no user, go to SignInActivity and stop here
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser == null) {
             saveLoginState(false, null);
@@ -53,12 +54,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // If we reach here, user is logged in
         saveLoginState(true, currentUser.getUid());
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // UI Adjustments
         View mainView = findViewById(R.id.main);
         if (mainView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
@@ -68,11 +67,25 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Sync and Load Data
-        new Atlas(getApplicationContext()).refreshFishPreviewsFromFirestoreAndSaveToRoom();
-        AquariumSync.syncAquariums(getApplicationContext(), currentUser.getUid());
+        // Reliable Sequential Sync
+        Atlas atlas = new Atlas(getApplicationContext());
+        atlas.refreshFishPreviewsFromFirestoreAndSaveToRoom(new Atlas.SyncCallback() {
+            @Override
+            public void onSyncComplete(int count) {
+                Log.d(TAG, "Atlas ready. Repairing IDs...");
+                DataRepairUtil.startRepair(() -> {
+                    Log.d(TAG, "Repair complete. Syncing aquariums...");
+                    new AquariumRepository(getApplicationContext()).syncAquariums(currentUser.getUid());
+                });
+            }
 
-        // Load Initial Fragment
+            @Override
+            public void onSyncFailed(Exception e) {
+                Log.e(TAG, "Atlas sync failed, attempting rescue sync.", e);
+                new AquariumRepository(getApplicationContext()).syncAquariums(currentUser.getUid());
+            }
+        });
+
         if (savedInstanceState == null) {
             fragmentManager.beginTransaction()
                     .replace(R.id.fragmentContainerView5, MyAquariumFragment.class, null)
@@ -88,22 +101,10 @@ public class MainActivity extends AppCompatActivity {
                 .apply();
     }
 
-    // Fragment Navigation Methods
-    public void onButton1(View view) {
-        switchFragment(new MyAquariumFragment());
-    }
-
-    public void onButton2(View view) {
-        switchFragment(new AtlasFragment());
-    }
-
-    public void onButton3(View view) {
-        switchFragment(new ForumFragment());
-    }
-
-    public void onButton4(View view) {
-        switchFragment(new SettingsFragment());
-    }
+    public void onButton1(View view) { switchFragment(new MyAquariumFragment()); }
+    public void onButton2(View view) { switchFragment(new AtlasFragment()); }
+    public void onButton3(View view) { switchFragment(new ForumFragment()); }
+    public void onButton4(View view) { switchFragment(new SettingsFragment()); }
 
     private void switchFragment(androidx.fragment.app.Fragment fragment) {
         fragmentManager.beginTransaction()

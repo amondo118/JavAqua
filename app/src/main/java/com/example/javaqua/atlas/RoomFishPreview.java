@@ -13,82 +13,52 @@ public class RoomFishPreview {
     private String latin;
     private String imageUrl;
     private String imageSML;
-    private String compatibility;
-    private String minTankSize;
-    private String temperature;
-    private String ph;
-    private String hardness;
-    private String temperament;
-    private String diet;
-    private String careLevel;
     private String description;
+    private String shortDescription;
+    private String difficulty;
+    
+    private double minVolume;
+    private double minTemp;
+    private double maxTemp;
+    
+    private int minSchoolSize;
+    private double bioload;
+    private String aggression;
+    
     private String sprite;
 
     public RoomFishPreview() {}
 
-    public RoomFishPreview(@NonNull String id, String name, String latin, String imageUrl, String imageSML,
-                           String compatibility, String minTankSize, String temperature, String ph, String hardness, 
-                           String temperament, String diet, String careLevel, String description, String sprite) {
-        this.id = id;
-        this.name = name;
-        this.latin = latin;
-        this.imageUrl = imageUrl;
-        this.imageSML = imageSML;
-        this.compatibility = compatibility;
-        this.minTankSize = minTankSize;
-        this.temperature = temperature;
-        this.ph = ph;
-        this.hardness = hardness;
-        this.temperament = temperament;
-        this.diet = diet;
-        this.careLevel = careLevel;
-        this.description = description;
-        this.sprite = sprite;
-    }
-
-    @NonNull
-    public String getId() { return id; }
+    @NonNull public String getId() { return id; }
     public void setId(@NonNull String id) { this.id = id; }
-
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-
     public String getLatin() { return latin; }
     public void setLatin(String latin) { this.latin = latin; }
-
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
     public String getImageSML() { return imageSML; }
     public void setImageSML(String imageSML) { this.imageSML = imageSML; }
-
-    public String getCompatibility() { return compatibility; }
-    public void setCompatibility(String compatibility) { this.compatibility = compatibility; }
-
-    public String getMinTankSize() { return minTankSize; }
-    public void setMinTankSize(String minTankSize) { this.minTankSize = minTankSize; }
-
-    public String getTemperature() { return temperature; }
-    public void setTemperature(String temperature) { this.temperature = temperature; }
-
-    public String getPh() { return ph; }
-    public void setPh(String ph) { this.ph = ph; }
-
-    public String getHardness() { return hardness; }
-    public void setHardness(String hardness) { this.hardness = hardness; }
-
-    public String getTemperament() { return temperament; }
-    public void setTemperament(String temperament) { this.temperament = temperament; }
-
-    public String getDiet() { return diet; }
-    public void setDiet(String diet) { this.diet = diet; }
-
-    public String getCareLevel() { return careLevel; }
-    public void setCareLevel(String careLevel) { this.careLevel = careLevel; }
-
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
+    public String getShortDescription() { return shortDescription; }
+    public void setShortDescription(String shortDescription) { this.shortDescription = shortDescription; }
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public double getMinVolume() { return minVolume; }
+    public void setMinVolume(double minVolume) { this.minVolume = minVolume; }
+    public double getMinTemp() { return minTemp; }
+    public void setMinTemp(double minTemp) { this.minTemp = minTemp; }
+    public double getMaxTemp() { return maxTemp; }
+    public void setMaxTemp(double maxTemp) { this.maxTemp = maxTemp; }
+    
+    public int getMinSchoolSize() { return minSchoolSize; }
+    public void setMinSchoolSize(int minSchoolSize) { this.minSchoolSize = minSchoolSize; }
+    public double getBioload() { return bioload; }
+    public void setBioload(double bioload) { this.bioload = bioload; }
+    public String getAggression() { return aggression; }
+    public void setAggression(String aggression) { this.aggression = aggression; }
+    
     public String getSprite() { return sprite; }
     public void setSprite(String sprite) { this.sprite = sprite; }
 }

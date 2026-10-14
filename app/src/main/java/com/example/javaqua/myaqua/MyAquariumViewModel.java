@@ -28,4 +28,10 @@ public class MyAquariumViewModel extends AndroidViewModel {
             aquariumRepository.loadAquariums(FirebaseAuth.getInstance().getCurrentUser().getUid());
         }
     }
+
+    public void refresh() {
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            aquariumRepository.syncAquariums(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        }
+    }
 }
